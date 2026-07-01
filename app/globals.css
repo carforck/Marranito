@@ -1,15 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f7f8;
+  --background: #f4f4fb;
   --surface: #ffffff;
-  --foreground: #16181d;
-  --muted: #6b7280;
-  --border: #e8e8ec;
-  --brand: #ff3d6e; /* acento fuerte, estilo Rappi */
-  --brand-soft: #ffe4ec;
-  --ok: #16a34a;
-  --warn: #d97706;
+  --foreground: #1c1b2e;
+  --muted: #8a8aa3;
+  --border: #eeeef6;
+
+  /* Morado fintech */
+  --brand: #6c5ce7;
+  --brand-2: #8b7cf0;
+  --grad-from: #7d70f2;
+  --grad-to: #5a49d6;
+  --brand-soft: #efecfe;
+
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #f43f5e;
 }
 
 @theme inline {
@@ -25,4 +32,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Degradado del hero */
+.hero-gradient {
+  background: linear-gradient(155deg, var(--grad-from) 0%, var(--grad-to) 100%);
 }
