@@ -74,6 +74,21 @@ export function StatusBadge({ status }: { status: ContributionStatus }) {
   );
 }
 
+export function QuotaChip({ falta, alDia }: { falta: number; alDia: boolean }) {
+  return (
+    <span
+      className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+      style={
+        alDia
+          ? { background: "var(--ok-soft)", color: "var(--ok)" }
+          : { background: "var(--warn-soft)", color: "var(--warn)" }
+      }
+    >
+      {alDia ? "Al día" : `Debe ${formatCOP(falta)}`}
+    </span>
+  );
+}
+
 export function MovementRow({
   c,
   showStatus = false,

@@ -2,10 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
-import { monthlySeries } from "@/lib/analytics";
+import { monthlySeries, monthsElapsed, quotaStatus } from "@/lib/analytics";
 import { CYCLE_YEAR } from "@/lib/constants";
 import { AppShell } from "@/components/AppShell";
-import { Card, MovementRow } from "@/components/ui";
+import { Card, MovementRow, QuotaChip } from "@/components/ui";
 import { EmojiAvatar } from "@/components/decor";
 import { SavingsChart } from "@/components/SavingsChart";
 
@@ -21,7 +21,10 @@ export default async function PerfilPage({
   const member = await store.getMember(id);
   if (!member) notFound();
 
-  const movs = await store.listByMember(id);
+  const [movs, quota] = await Promise.all([
+    store.listByMember(id),
+    store.getMonthlyQuota(),
+  ]);
   const confirmados = movs.filter((c) => c.status === "confirmado");
   const total = confirmados.reduce((s, c) => s + c.amount, 0);
   const pendiente = movs
@@ -31,6 +34,7 @@ export default async function PerfilPage({
   const now = new Date();
   const upTo = now.getFullYear() === CYCLE_YEAR ? now.getMonth() + 1 : 12;
   const series = monthlySeries(confirmados, CYCLE_YEAR, upTo);
+  const qs = quotaStatus(total, quota, monthsElapsed(CYCLE_YEAR, now));
 
   return (
     <AppShell>
@@ -43,7 +47,10 @@ export default async function PerfilPage({
         <div className="mt-4 flex items-center gap-4">
           <EmojiAvatar emoji={member.emoji} color={member.color} size="lg" />
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">{member.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-extrabold tracking-tight">{member.name}</h1>
+              {qs && <QuotaChip falta={qs.falta} alDia={qs.alDia} />}
+            </div>
             <p className="text-sm text-[var(--muted)]">
               {confirmados.length} {confirmados.length === 1 ? "aporte" : "aportes"} confirmados
             </p>

@@ -9,6 +9,7 @@ import { LoginForm } from "./LoginForm";
 import { MembersManager } from "./MembersManager";
 import {
   logout,
+  setQuota,
   addContribution,
   confirmContribution,
   reverseContribution,
@@ -34,9 +35,10 @@ export default async function AdminPage() {
   }
 
   const store = getStore();
-  const [members, all] = await Promise.all([
+  const [members, all, quota] = await Promise.all([
     store.listMembers(),
     store.listAll(),
+    store.getMonthlyQuota(),
   ]);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -51,6 +53,27 @@ export default async function AdminPage() {
             </button>
           </form>
         </div>
+
+        {/* Cuota del ciclo */}
+        <Card className="p-5">
+          <h2 className="mb-1 font-semibold">Cuota mensual</h2>
+          <p className="mb-4 text-sm text-[var(--muted)]">
+            Cuánto debería aportar cada compañero por mes. Con esto la app marca
+            quién va al día. Déjalo en 0 si no quieres metas.
+          </p>
+          <form action={setQuota} className="flex gap-2">
+            <input
+              name="quota"
+              inputMode="numeric"
+              defaultValue={quota || ""}
+              placeholder="Ej: 200000"
+              className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 outline-none focus:border-[var(--brand)]"
+            />
+            <button className="rounded-xl bg-[var(--brand)] px-5 font-semibold text-white">
+              Guardar
+            </button>
+          </form>
+        </Card>
 
         {/* Registrar aporte */}
         <Card className="p-5">

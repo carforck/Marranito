@@ -37,6 +37,10 @@ export interface Store {
   addContribution(input: NewContribution): Promise<Contribution>;
   confirmContribution(id: string): Promise<void>;
   reverseContribution(id: string, note: string): Promise<void>;
+
+  // Cuota mensual esperada por compañero (0 = sin meta).
+  getMonthlyQuota(): Promise<number>;
+  setMonthlyQuota(amount: number): Promise<void>;
 }
 
 import { LocalStore } from "./local";

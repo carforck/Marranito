@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,8 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://marranito-iota.vercel.app"),
   title: "Marranito — Fondo de ahorro",
-  description: "El marranito del grupo: mira cuánto llevamos ahorrado.",
+  description: "El marranito del grupo: mira cuánto llevamos ahorrado, transparente para todos.",
+  openGraph: {
+    title: "Marranito — Fondo de ahorro",
+    description: "El fondo de ahorro del grupo, transparente. Mira cuánto llevamos. 🐷",
+    type: "website",
+    locale: "es_CO",
+  },
+  twitter: { card: "summary_large_image" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6c5ce7",
 };
 
 export default function RootLayout({

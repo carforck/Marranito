@@ -150,4 +150,19 @@ export class SupabaseStore implements Store {
       [id, note.trim()],
     );
   }
+
+  async getMonthlyQuota(): Promise<number> {
+    const { rows } = await getPool().query(
+      `select meta_por_miembro from public.ciclos where anio=$1`,
+      [CYCLE_YEAR],
+    );
+    return Number(rows[0]?.meta_por_miembro ?? 0);
+  }
+
+  async setMonthlyQuota(amount: number): Promise<void> {
+    await getPool().query(
+      `update public.ciclos set meta_por_miembro=$2 where anio=$1`,
+      [CYCLE_YEAR, amount || null],
+    );
+  }
 }

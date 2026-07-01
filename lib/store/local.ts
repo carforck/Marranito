@@ -11,6 +11,7 @@ const DATA_FILE = path.join(DATA_DIR, "fondo.json");
 interface DbShape {
   members: Member[];
   contributions: Contribution[];
+  monthlyQuota?: number;
 }
 
 async function read(): Promise<DbShape> {
@@ -41,7 +42,7 @@ function makeSeed(): DbShape {
     mkc(members[0], 200000, "2026-04-15", "confirmado", "nequi"),
     mkc(members[1], 200000, "2026-05-18", "pendiente", "daviplata"),
   ];
-  return { members, contributions };
+  return { members, contributions, monthlyQuota: 200000 };
 }
 
 function mkc(
@@ -186,6 +187,17 @@ export class LocalStore implements Store {
       c.status = "reversado";
       c.note = note.trim();
     }
+    await write(db);
+  }
+
+  async getMonthlyQuota() {
+    const db = await read();
+    return db.monthlyQuota ?? 0;
+  }
+
+  async setMonthlyQuota(amount: number) {
+    const db = await read();
+    db.monthlyQuota = amount || 0;
     await write(db);
   }
 }

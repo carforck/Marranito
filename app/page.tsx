@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
-import { seriesByMember } from "@/lib/analytics";
+import { seriesByMember, memberTotals, monthsElapsed, quotaStatus } from "@/lib/analytics";
+import { CYCLE_YEAR } from "@/lib/constants";
 import { AppShell } from "@/components/AppShell";
 import { Card, SectionTitle, StatCard, MovementRow } from "@/components/ui";
 import { HeroDecor, EmojiAvatar } from "@/components/decor";
@@ -11,16 +12,24 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const store = getStore();
-  const [summary, confirmed, members] = await Promise.all([
+  const [summary, confirmed, members, quota] = await Promise.all([
     store.getSummary(),
     store.listConfirmed(),
     store.listMembers(),
+    store.getMonthlyQuota(),
   ]);
 
   const now = new Date();
   const upTo = now.getFullYear() === summary.cycleYear ? now.getMonth() + 1 : 12;
   const { labels, series } = seriesByMember(confirmed, members, summary.cycleYear, upTo);
   const recent = confirmed.slice(0, 6);
+
+  // Cuántos van al día (solo si hay meta configurada).
+  const meses = monthsElapsed(CYCLE_YEAR, now);
+  const totalsById = new Map(memberTotals(confirmed).map((t) => [t.memberId, t.total]));
+  const alDia = quota
+    ? members.filter((m) => quotaStatus(totalsById.get(m.id) ?? 0, quota, meses)?.alDia).length
+    : 0;
 
   return (
     <AppShell>
@@ -38,6 +47,7 @@ export default async function Home() {
               </p>
               <p className="mt-2 text-sm text-white/75">
                 Fondo transparente · {summary.memberCount} compañeros
+                {quota > 0 ? ` · ${alDia}/${summary.memberCount} al día` : ""}
               </p>
             </div>
             <Link

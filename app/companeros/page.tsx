@@ -1,19 +1,22 @@
 import Link from "next/link";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
-import { memberTotals } from "@/lib/analytics";
+import { memberTotals, monthsElapsed, quotaStatus } from "@/lib/analytics";
+import { CYCLE_YEAR } from "@/lib/constants";
 import { AppShell } from "@/components/AppShell";
-import { Card } from "@/components/ui";
+import { Card, QuotaChip } from "@/components/ui";
 import { EmojiAvatar } from "@/components/decor";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompanerosPage() {
   const store = getStore();
-  const [members, confirmed] = await Promise.all([
+  const [members, confirmed, quota] = await Promise.all([
     store.listMembers(),
     store.listConfirmed(),
+    store.getMonthlyQuota(),
   ]);
+  const meses = monthsElapsed(CYCLE_YEAR, new Date());
 
   const totals = memberTotals(confirmed);
   const totalById = new Map(totals.map((t) => [t.memberId, t]));
@@ -45,6 +48,7 @@ export default async function CompanerosPage() {
           <div className="mt-6 space-y-2.5">
             {rows.map((m, i) => {
               const pct = grand > 0 ? Math.round((m.total / grand) * 100) : 0;
+              const qs = quotaStatus(m.total, quota, meses);
               return (
                 <Link key={m.id} href={`/companeros/${m.id}`} className="block">
                   <Card className="flex items-center gap-3 px-4 py-3 transition hover:border-[var(--brand)]">
@@ -53,7 +57,10 @@ export default async function CompanerosPage() {
                     </span>
                     <EmojiAvatar emoji={m.emoji} color={m.color} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{m.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-semibold">{m.name}</p>
+                        {qs && <QuotaChip falta={qs.falta} alDia={qs.alDia} />}
+                      </div>
                       <p className="text-xs text-[var(--muted)]">
                         {m.count} {m.count === 1 ? "aporte" : "aportes"} · {pct}% del fondo
                       </p>

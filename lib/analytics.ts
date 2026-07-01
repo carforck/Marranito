@@ -1,5 +1,30 @@
 import type { Contribution, Member } from "./types";
 
+/** Meses transcurridos del ciclo (1..12). Si el año ya pasó, 12. */
+export function monthsElapsed(year: number, now: Date): number {
+  if (now.getFullYear() < year) return 0;
+  if (now.getFullYear() > year) return 12;
+  return now.getMonth() + 1;
+}
+
+export interface QuotaStatus {
+  expected: number; // lo que debería llevar hasta hoy
+  falta: number; // cuánto le falta (0 si va al día)
+  alDia: boolean;
+}
+
+/** Estado de cuota de un compañero dado su total confirmado. */
+export function quotaStatus(
+  total: number,
+  monthlyQuota: number,
+  monthsSoFar: number,
+): QuotaStatus | null {
+  if (!monthlyQuota || monthlyQuota <= 0) return null; // sin meta configurada
+  const expected = monthlyQuota * monthsSoFar;
+  const falta = Math.max(0, expected - total);
+  return { expected, falta, alDia: falta === 0 };
+}
+
 export interface MemberTotal {
   memberId: string;
   memberName: string;

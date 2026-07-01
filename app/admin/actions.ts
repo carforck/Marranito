@@ -68,6 +68,13 @@ export async function deleteMember(formData: FormData) {
   revalidateAll();
 }
 
+export async function setQuota(formData: FormData) {
+  await requireAuth();
+  const amount = parseCOP(String(formData.get("quota") ?? ""));
+  await getStore().setMonthlyQuota(amount ?? 0);
+  revalidateAll();
+}
+
 export async function addContribution(formData: FormData) {
   await requireAuth();
   const memberId = String(formData.get("memberId") ?? "");
