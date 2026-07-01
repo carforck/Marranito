@@ -34,6 +34,9 @@ function rowToMember(r: Record<string, unknown>): Member {
 const JOIN = `select a.*, m.nombre, m.emoji, m.color
   from public.aportes a join public.miembros m on m.id = a.miembro_id`;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (s: string) => UUID_RE.test(s);
+
 export class SupabaseStore implements Store {
   async getSummary(): Promise<FundSummary> {
     const pool = getPool();
@@ -76,6 +79,7 @@ export class SupabaseStore implements Store {
   }
 
   async getContribution(id: string): Promise<Contribution | null> {
+    if (!isUuid(id)) return null;
     const rows = await this.list("where a.id = $1", [id]);
     return rows[0] ?? null;
   }
@@ -88,6 +92,7 @@ export class SupabaseStore implements Store {
   }
 
   async getMember(id: string): Promise<Member | null> {
+    if (!isUuid(id)) return null;
     const { rows } = await getPool().query(
       `select * from public.miembros where id = $1`,
       [id],
