@@ -30,25 +30,34 @@ function revalidateAll() {
   revalidatePath("/companeros");
 }
 
-export async function addMember(formData: FormData) {
-  await requireAuth();
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) return;
-  const emoji = String(formData.get("emoji") ?? "") || MEMBER_EMOJIS[0];
-  const color = String(formData.get("color") ?? "") || MEMBER_COLORS[0];
-  await getStore().addMember({ name, emoji, color });
-  revalidateAll();
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export async function updateMember(formData: FormData) {
+type MemberResult = { ok: boolean; error: string | null };
+
+export async function addMember(_prev: unknown, formData: FormData): Promise<MemberResult> {
+  await requireAuth();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { ok: false, error: "Falta el nombre." };
+  // Emoji/color aleatorios si no se eligieron; cada quien los cambia después.
+  const emoji = String(formData.get("emoji") ?? "") || pick(MEMBER_EMOJIS);
+  const color = String(formData.get("color") ?? "") || pick(MEMBER_COLORS);
+  await getStore().addMember({ name, emoji, color });
+  revalidateAll();
+  return { ok: true, error: null };
+}
+
+export async function updateMember(_prev: unknown, formData: FormData): Promise<MemberResult> {
   await requireAuth();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
-  if (!id || !name) return;
-  const emoji = String(formData.get("emoji") ?? "") || MEMBER_EMOJIS[0];
-  const color = String(formData.get("color") ?? "") || MEMBER_COLORS[0];
+  if (!id || !name) return { ok: false, error: "Falta el nombre." };
+  const emoji = String(formData.get("emoji") ?? "") || pick(MEMBER_EMOJIS);
+  const color = String(formData.get("color") ?? "") || pick(MEMBER_COLORS);
   await getStore().updateMember(id, { name, emoji, color });
   revalidateAll();
+  return { ok: true, error: null };
 }
 
 export async function deleteMember(formData: FormData) {

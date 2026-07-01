@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { addMember, updateMember, deleteMember } from "./actions";
 import { MEMBER_COLORS, MEMBER_EMOJIS } from "@/lib/constants";
 import { EmojiAvatar } from "@/components/decor";
 import type { Member } from "@/lib/types";
+
+function randOf<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 function Editor({
   member,
@@ -13,13 +17,24 @@ function Editor({
   member?: Member;
   onDone?: () => void;
 }) {
-  const [emoji, setEmoji] = useState(member?.emoji ?? MEMBER_EMOJIS[0]);
-  const [color, setColor] = useState(member?.color ?? MEMBER_COLORS[0]);
   const editing = Boolean(member);
+  // Al crear: emoji/color aleatorio (editable). Al editar: los actuales.
+  const [emoji, setEmoji] = useState(member?.emoji ?? (() => randOf(MEMBER_EMOJIS)));
+  const [color, setColor] = useState(member?.color ?? (() => randOf(MEMBER_COLORS)));
+
+  const [state, formAction, pending] = useActionState(
+    editing ? updateMember : addMember,
+    { ok: false, error: null } as { ok: boolean; error: string | null },
+  );
+
+  // Cerrar el editor SOLO cuando la acción terminó bien.
+  useEffect(() => {
+    if (state?.ok) onDone?.();
+  }, [state, onDone]);
 
   return (
     <form
-      action={editing ? updateMember : addMember}
+      action={formAction}
       className="themed space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-4"
     >
       {editing && <input type="hidden" name="id" value={member!.id} />}
@@ -73,23 +88,25 @@ function Editor({
         </div>
       </div>
 
+      {state?.error && (
+        <p className="text-sm font-medium text-[var(--danger)]">{state.error}</p>
+      )}
+
       <div className="flex gap-2">
         <button
           type="submit"
-          onClick={() => onDone?.()}
-          className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white"
+          disabled={pending}
+          className="rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
-          {editing ? "Guardar" : "Agregar compañero"}
+          {pending ? "Guardando…" : editing ? "Guardar" : "Agregar compañero"}
         </button>
-        {editing && (
-          <button
-            type="button"
-            onClick={onDone}
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--muted)]"
-          >
-            Cancelar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onDone}
+          className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--muted)]"
+        >
+          Cancelar
+        </button>
       </div>
     </form>
   );
