@@ -1,22 +1,54 @@
 @import "tailwindcss";
 
+/* dark mode por clase en <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f4f4fb;
   --surface: #ffffff;
+  --surface-2: #fbfbfe;
   --foreground: #1c1b2e;
   --muted: #8a8aa3;
-  --border: #eeeef6;
+  --border: #ebebf4;
 
-  /* Morado fintech */
   --brand: #6c5ce7;
   --brand-2: #8b7cf0;
   --grad-from: #7d70f2;
   --grad-to: #5a49d6;
   --brand-soft: #efecfe;
+  --brand-soft-fg: #6c5ce7;
 
-  --ok: #22c55e;
-  --warn: #f59e0b;
-  --danger: #f43f5e;
+  --ok: #16a34a;
+  --ok-soft: #e6f9ee;
+  --warn: #d97706;
+  --warn-soft: #fff3e0;
+  --danger: #e11d48;
+
+  --shadow: 0 12px 30px rgba(70, 60, 150, 0.1);
+}
+
+.dark {
+  --background: #100f1a;
+  --surface: #1b1930;
+  --surface-2: #211f38;
+  --foreground: #ededf6;
+  --muted: #918fb2;
+  --border: #2c2947;
+
+  --brand: #8b7cf0;
+  --brand-2: #a89bf7;
+  --grad-from: #5b4bd6;
+  --grad-to: #3a2e9e;
+  --brand-soft: #2a2550;
+  --brand-soft-fg: #b7abf9;
+
+  --ok: #4ade80;
+  --ok-soft: #14331f;
+  --warn: #fbbf24;
+  --warn-soft: #3a2a10;
+  --danger: #fb7185;
+
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
@@ -27,6 +59,7 @@
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+html { background: var(--background); }
 body {
   background: var(--background);
   color: var(--foreground);
@@ -34,7 +67,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Degradado del hero */
 .hero-gradient {
   background: linear-gradient(155deg, var(--grad-from) 0%, var(--grad-to) 100%);
+}
+
+/* transición suave al cambiar de tema */
+@media (prefers-reduced-motion: no-preference) {
+  body, .themed { transition: background-color 0.25s ease, color 0.25s ease; }
 }

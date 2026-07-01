@@ -1,7 +1,8 @@
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
 import { isAuthed } from "@/lib/auth";
-import { Header, Card, StatusBadge } from "@/components/ui";
+import { AppShell } from "@/components/AppShell";
+import { Card, StatusBadge } from "@/components/ui";
 import { LoginForm } from "./LoginForm";
 import {
   logout,
@@ -16,9 +17,8 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   if (!(await isAuthed())) {
     return (
-      <>
-        <Header adminLink={false} />
-        <main className="mx-auto w-full max-w-sm flex-1 px-5 py-16">
+      <AppShell>
+        <main className="mx-auto w-full max-w-sm px-5 py-16">
           <Card className="p-6">
             <h1 className="mb-1 text-xl font-bold">Tesorería</h1>
             <p className="mb-6 text-sm text-[var(--muted)]">
@@ -27,7 +27,7 @@ export default async function AdminPage() {
             <LoginForm />
           </Card>
         </main>
-      </>
+      </AppShell>
     );
   }
 
@@ -36,12 +36,11 @@ export default async function AdminPage() {
     store.listMembers(),
     store.listAll(),
   ]);
-  const today = "2026-06-30";
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <>
-      <Header adminLink={false} />
-      <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-5 py-8">
+    <AppShell>
+      <main className="mx-auto w-full max-w-3xl space-y-8 px-5 py-8">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">Tesorería</h1>
           <form action={logout}>
@@ -165,6 +164,6 @@ export default async function AdminPage() {
           </ul>
         </Card>
       </main>
-    </>
+    </AppShell>
   );
 }

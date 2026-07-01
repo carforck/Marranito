@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
-import { StatusBadge } from "@/components/ui";
-import { MarranitoMark } from "@/components/Logo";
+import { memberTotals, monthlySeries } from "@/lib/analytics";
+import { AppShell } from "@/components/AppShell";
+import { Card, SectionTitle, StatCard, MovementRow } from "@/components/ui";
 import { HeroDecor, IconAvatar } from "@/components/decor";
+import { SavingsChart } from "@/components/SavingsChart";
 
 export const dynamic = "force-dynamic";
 
@@ -14,117 +16,99 @@ export default async function Home() {
     store.listConfirmed(),
   ]);
 
+  const now = new Date();
+  const upTo =
+    now.getFullYear() === summary.cycleYear ? now.getMonth() + 1 : 12;
+  const series = monthlySeries(confirmed, summary.cycleYear, upTo);
+  const tops = memberTotals(confirmed).slice(0, 5);
+  const recent = confirmed.slice(0, 6);
+
   return (
-    <main className="mx-auto w-full max-w-md flex-1 pb-24">
-      {/* HERO con degradado morado */}
-      <section className="hero-gradient relative overflow-hidden px-6 pb-24 pt-8 text-white">
-        <HeroDecor />
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-2 text-white">
-            <MarranitoMark size={32} />
-            <span className="text-lg font-extrabold tracking-tight">Marranito</span>
-          </div>
-          <Link
-            href="/admin"
-            className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
-          >
-            Tesorería
-          </Link>
-        </div>
-
-        <div className="relative mt-8">
-          <p className="text-sm font-medium text-white/80">
-            Ahorrado en {summary.cycleYear}
-          </p>
-          <p className="mt-1 text-4xl font-extrabold tracking-tight">
-            {formatCOP(summary.totalConfirmed)}
-          </p>
-        </div>
-      </section>
-
-      {/* Tarjeta de stats, flotando sobre el hero */}
-      <section className="-mt-16 px-4">
-        <div className="grid grid-cols-3 gap-3">
-          <MiniStat label="Compañeros" value={String(summary.memberCount)} />
-          <MiniStat label="Aportes" value={String(summary.contributionCount)} />
-          <MiniStat
-            label="Por confirmar"
-            value={formatCOP(summary.totalPending)}
-            small
-          />
-        </div>
-      </section>
-
-      {/* Movimientos */}
-      <section className="mt-8 px-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-bold tracking-wide text-[var(--muted)]">
-            MOVIMIENTOS
-          </h2>
-        </div>
-
-        {confirmed.length === 0 ? (
-          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] px-5 py-10 text-center">
-            <p className="text-sm text-[var(--muted)]">
-              Todavía no hay aportes confirmados.
+    <AppShell>
+      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
+        {/* Hero */}
+        <section className="hero-gradient relative overflow-hidden rounded-3xl px-6 py-7 text-white">
+          <HeroDecor />
+          <div className="relative">
+            <p className="text-sm font-medium text-white/80">
+              Ahorrado en {summary.cycleYear}
+            </p>
+            <p className="mt-1 text-4xl font-extrabold tracking-tight sm:text-5xl">
+              {formatCOP(summary.totalConfirmed)}
+            </p>
+            <p className="mt-2 text-sm text-white/75">
+              Fondo transparente · {summary.memberCount} compañeros
             </p>
           </div>
-        ) : (
-          <div className="space-y-2.5">
-            {confirmed.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-              >
-                <IconAvatar name={c.memberName} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{c.memberName}</p>
-                  <p className="text-xs text-[var(--muted)]">{formatDate(c.date)}</p>
-                </div>
-                <span className="font-bold tabular-nums text-[var(--ok)]">
-                  + {formatCOP(c.amount)}
-                </span>
-              </div>
-            ))}
+        </section>
+
+        {/* Stats */}
+        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard label="Ahorrado" value={formatCOP(summary.totalConfirmed)} accent />
+          <StatCard label="Compañeros" value={String(summary.memberCount)} />
+          <StatCard label="Aportes" value={String(summary.contributionCount)} />
+          <StatCard label="Por confirmar" value={formatCOP(summary.totalPending)} />
+        </section>
+
+        {/* Gráfica + top compañeros */}
+        <section className="mt-6 grid gap-4 lg:grid-cols-5">
+          <div className="lg:col-span-3">
+            <SavingsChart data={series} />
           </div>
-        )}
+          <div className="lg:col-span-2">
+            <Card className="h-full p-5">
+              <SectionTitle>QUIÉN MÁS HA APORTADO</SectionTitle>
+              {tops.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">Aún no hay aportes.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {tops.map((m, i) => (
+                    <li key={m.memberId} className="flex items-center gap-3">
+                      <span className="w-4 text-sm font-bold text-[var(--muted)]">
+                        {i + 1}
+                      </span>
+                      <IconAvatar name={m.memberName} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{m.memberName}</p>
+                        <p className="text-xs text-[var(--muted)]">{m.count} aportes</p>
+                      </div>
+                      <span className="text-sm font-bold tabular-nums">
+                        {formatCOP(m.total)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </div>
+        </section>
 
-        <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-[var(--muted)]">
-          <StatusBadge status="confirmado" />
-          Por privacidad, los comprobantes no se muestran aquí.
-        </p>
-      </section>
-    </main>
+        {/* Movimientos recientes */}
+        <section className="mt-6">
+          <div className="mb-3 flex items-center justify-between">
+            <SectionTitle>MOVIMIENTOS RECIENTES</SectionTitle>
+            <Link
+              href="/movimientos"
+              className="text-xs font-semibold text-[var(--brand-soft-fg)]"
+            >
+              Ver todos →
+            </Link>
+          </div>
+          {recent.length === 0 ? (
+            <Card className="px-5 py-10 text-center">
+              <p className="text-sm text-[var(--muted)]">
+                Todavía no hay aportes confirmados.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-2.5">
+              {recent.map((c) => (
+                <MovementRow key={c.id} c={c} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </AppShell>
   );
-}
-
-function MiniStat({
-  label,
-  value,
-  small = false,
-}: {
-  label: string;
-  value: string;
-  small?: boolean;
-}) {
-  return (
-    <div className="rounded-2xl bg-[var(--surface)] px-3 py-4 text-center shadow-[0_8px_30px_rgba(70,60,150,0.10)]">
-      <p
-        className={`font-extrabold tabular-nums ${small ? "text-sm" : "text-lg"}`}
-      >
-        {value}
-      </p>
-      <p className="mt-0.5 text-[11px] leading-tight text-[var(--muted)]">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso + "T00:00:00").toLocaleDateString("es-CO", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 }
