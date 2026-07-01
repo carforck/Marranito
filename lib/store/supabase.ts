@@ -75,6 +75,11 @@ export class SupabaseStore implements Store {
     return this.list("where a.miembro_id = $1", [memberId]);
   }
 
+  async getContribution(id: string): Promise<Contribution | null> {
+    const rows = await this.list("where a.id = $1", [id]);
+    return rows[0] ?? null;
+  }
+
   async listMembers(): Promise<Member[]> {
     const { rows } = await getPool().query(
       `select * from public.miembros order by nombre asc`,

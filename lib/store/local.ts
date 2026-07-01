@@ -118,6 +118,12 @@ export class LocalStore implements Store {
     return db.members.find((m) => m.id === id) ?? null;
   }
 
+  async getContribution(id: string) {
+    const db = await read();
+    const c = db.contributions.find((x) => x.id === id);
+    return c ? decorate(c, db.members) : null;
+  }
+
   async addMember(input: MemberInput): Promise<Member> {
     const db = await read();
     const member: Member = {

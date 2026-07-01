@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
 import { isAuthed } from "@/lib/auth";
@@ -123,7 +124,9 @@ export default async function AdminPage() {
               <div className="flex items-center gap-3">
                 <EmojiAvatar emoji={c.memberEmoji} color={c.memberColor} size="sm" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{c.memberName}</p>
+                  <Link href={`/movimientos/${c.id}`} className="truncate font-medium hover:underline">
+                    {c.memberName}
+                  </Link>
                   <p className="truncate text-xs text-[var(--muted)]">
                     {c.date}
                     {c.metodo ? ` · ${metodoLabel(c.metodo)}` : ""}

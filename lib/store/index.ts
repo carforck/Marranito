@@ -30,6 +30,7 @@ export interface Store {
   listMembers(): Promise<Member[]>;
   getMember(id: string): Promise<Member | null>;
   listByMember(memberId: string): Promise<Contribution[]>;
+  getContribution(id: string): Promise<Contribution | null>;
 
   addMember(input: MemberInput): Promise<Member>;
   updateMember(id: string, input: MemberInput): Promise<void>;

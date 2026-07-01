@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatCOP } from "@/lib/money";
 import { EmojiAvatar } from "./decor";
 import { metodoLabel } from "@/lib/constants";
@@ -101,7 +102,10 @@ export function MovementRow({
     .filter(Boolean)
     .join(" · ");
   return (
-    <div className="themed flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+    <Link
+      href={`/movimientos/${c.id}`}
+      className="themed flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--brand)]"
+    >
       <EmojiAvatar emoji={c.memberEmoji} color={c.memberColor} />
       <div className="min-w-0 flex-1">
         <p className={`truncate font-semibold ${reversed ? "line-through opacity-60" : ""}`}>
@@ -114,15 +118,9 @@ export function MovementRow({
       </div>
       <div className="flex flex-none items-center gap-2.5">
         {c.soporteUrl && (
-          <a
-            href={c.soporteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Ver soporte"
-            className="text-[var(--muted)] hover:text-[var(--brand-soft-fg)]"
-          >
+          <span title="Tiene soporte" className="text-[var(--muted)]">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" /></svg>
-          </a>
+          </span>
         )}
         {showStatus && <StatusBadge status={c.status} />}
         <span
@@ -133,8 +131,9 @@ export function MovementRow({
           {c.status === "confirmado" ? "+ " : ""}
           {formatCOP(c.amount)}
         </span>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 flex-none text-[var(--muted)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
       </div>
-    </div>
+    </Link>
   );
 }
 
