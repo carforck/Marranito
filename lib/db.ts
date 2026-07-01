@@ -1,4 +1,9 @@
-import { Pool } from "pg";
+import pg, { Pool } from "pg";
+
+// La columna `fecha` es tipo DATE (OID 1082). Por defecto node-pg la
+// convierte a un objeto Date (con desfase de zona horaria); la queremos
+// como string "YYYY-MM-DD" tal cual viene de Postgres.
+pg.types.setTypeParser(1082, (v) => v);
 
 // Pool de Postgres hacia Supabase. Solo servidor.
 // Usa el pooler de Supabase (apto para serverless/Vercel).
