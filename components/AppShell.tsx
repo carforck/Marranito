@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MarranitoMark } from "./Logo";
 
-type IconName = "home" | "list" | "people" | "vault";
+type IconName = "home" | "plus" | "list" | "people" | "vault";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Resumen", icon: "home" },
+  { href: "/aportar", label: "Aportar", icon: "plus" },
   { href: "/movimientos", label: "Movimientos", icon: "list" },
   { href: "/companeros", label: "Compañeros", icon: "people" },
   { href: "/admin", label: "Tesorería", icon: "vault" },
@@ -19,6 +20,8 @@ function Icon({ name }: { name: IconName }) {
   switch (name) {
     case "home":
       return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;
+    case "plus":
+      return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>;
     case "list":
       return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>;
     case "people":

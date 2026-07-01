@@ -1,15 +1,12 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
-import type { Store } from "./index";
+import type { Store, NewContribution, MemberInput } from "./index";
 import type { Contribution, Member, FundSummary } from "@/lib/types";
-
-// Almacén local en archivo JSON. Sirve para desarrollo y demo.
-// En producción (Vercel) se reemplaza por el adaptador de Supabase.
+import { CYCLE_YEAR } from "@/lib/constants";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "fondo.json");
-const CYCLE_YEAR = 2026;
 
 interface DbShape {
   members: Member[];
@@ -18,10 +15,8 @@ interface DbShape {
 
 async function read(): Promise<DbShape> {
   try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(raw) as DbShape;
+    return JSON.parse(await fs.readFile(DATA_FILE, "utf-8")) as DbShape;
   } catch {
-    // Primera vez: datos de ejemplo para que la UI no se vea vacía.
     const seed = makeSeed();
     await write(seed);
     return seed;
@@ -35,74 +30,100 @@ async function write(db: DbShape): Promise<void> {
 
 function makeSeed(): DbShape {
   const members: Member[] = [
-    { id: "m1", name: "Carlos Carranza", createdAt: "2026-01-05T12:00:00Z" },
-    { id: "m2", name: "Laura Gómez", createdAt: "2026-01-05T12:00:00Z" },
-    { id: "m3", name: "Andrés Pérez", createdAt: "2026-01-06T12:00:00Z" },
+    { id: "m1", name: "Carlos Carranza", emoji: "🐷", color: "#6c5ce7", createdAt: "2026-01-05T12:00:00Z" },
+    { id: "m2", name: "Laura Gómez", emoji: "🦊", color: "#22c55e", createdAt: "2026-01-05T12:00:00Z" },
+    { id: "m3", name: "Andrés Pérez", emoji: "🐻", color: "#f59e0b", createdAt: "2026-01-06T12:00:00Z" },
   ];
   const contributions: Contribution[] = [
-    mkc("m1", "Carlos Carranza", 200000, "2026-01-15", "confirmado"),
-    mkc("m2", "Laura Gómez", 200000, "2026-01-16", "confirmado"),
-    mkc("m3", "Andrés Pérez", 150000, "2026-01-20", "confirmado"),
-    mkc("m1", "Carlos Carranza", 200000, "2026-02-15", "confirmado"),
-    mkc("m2", "Laura Gómez", 200000, "2026-02-18", "pendiente"),
+    mkc(members[0], 200000, "2026-01-15", "confirmado", "nequi"),
+    mkc(members[1], 200000, "2026-02-16", "confirmado", "bancolombia"),
+    mkc(members[2], 150000, "2026-03-20", "confirmado", "efectivo"),
+    mkc(members[0], 200000, "2026-04-15", "confirmado", "nequi"),
+    mkc(members[1], 200000, "2026-05-18", "pendiente", "daviplata"),
   ];
   return { members, contributions };
 }
 
 function mkc(
-  memberId: string,
-  memberName: string,
+  m: Member,
   amount: number,
   date: string,
   status: Contribution["status"],
+  metodo: Contribution["metodo"],
 ): Contribution {
   return {
     id: randomUUID(),
-    memberId,
-    memberName,
+    memberId: m.id,
+    memberName: m.name,
+    memberEmoji: m.emoji,
+    memberColor: m.color,
     amount,
     date,
     status,
+    metodo,
     createdAt: `${date}T12:00:00Z`,
   };
+}
+
+function decorate(c: Contribution, members: Member[]): Contribution {
+  const m = members.find((x) => x.id === c.memberId);
+  return m ? { ...c, memberName: m.name, memberEmoji: m.emoji, memberColor: m.color } : c;
 }
 
 export class LocalStore implements Store {
   async getSummary(): Promise<FundSummary> {
     const db = await read();
-    const confirmed = db.contributions.filter((c) => c.status === "confirmado");
-    const pending = db.contributions.filter((c) => c.status === "pendiente");
+    const conf = db.contributions.filter((c) => c.status === "confirmado");
+    const pend = db.contributions.filter((c) => c.status === "pendiente");
     return {
-      totalConfirmed: confirmed.reduce((s, c) => s + c.amount, 0),
-      totalPending: pending.reduce((s, c) => s + c.amount, 0),
+      totalConfirmed: conf.reduce((s, c) => s + c.amount, 0),
+      totalPending: pend.reduce((s, c) => s + c.amount, 0),
       memberCount: db.members.length,
-      contributionCount: confirmed.length,
+      contributionCount: conf.length,
       cycleYear: CYCLE_YEAR,
     };
   }
 
-  async listConfirmed(): Promise<Contribution[]> {
+  async listConfirmed() {
     const db = await read();
     return db.contributions
       .filter((c) => c.status === "confirmado")
+      .map((c) => decorate(c, db.members))
       .sort((a, b) => b.date.localeCompare(a.date));
   }
 
-  async listAll(): Promise<Contribution[]> {
+  async listAll() {
     const db = await read();
-    return [...db.contributions].sort((a, b) => b.date.localeCompare(a.date));
+    return db.contributions
+      .map((c) => decorate(c, db.members))
+      .sort((a, b) => b.date.localeCompare(a.date));
   }
 
-  async listMembers(): Promise<Member[]> {
+  async listByMember(memberId: string) {
+    const db = await read();
+    return db.contributions
+      .filter((c) => c.memberId === memberId)
+      .map((c) => decorate(c, db.members))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  async listMembers() {
     const db = await read();
     return [...db.members].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async addMember(name: string): Promise<Member> {
+  async getMember(id: string) {
+    const db = await read();
+    return db.members.find((m) => m.id === id) ?? null;
+  }
+
+  async addMember(input: MemberInput): Promise<Member> {
     const db = await read();
     const member: Member = {
       id: randomUUID(),
-      name: name.trim(),
+      name: input.name.trim(),
+      emoji: input.emoji,
+      color: input.color,
       createdAt: new Date().toISOString(),
     };
     db.members.push(member);
@@ -110,44 +131,61 @@ export class LocalStore implements Store {
     return member;
   }
 
-  async addContribution(input: {
-    memberId: string;
-    amount: number;
-    date: string;
-    confirmNow?: boolean;
-  }): Promise<Contribution> {
+  async updateMember(id: string, input: MemberInput) {
+    const db = await read();
+    const m = db.members.find((x) => x.id === id);
+    if (m) {
+      m.name = input.name.trim();
+      m.emoji = input.emoji;
+      m.color = input.color;
+      await write(db);
+    }
+  }
+
+  async deleteMember(id: string) {
+    const db = await read();
+    if (db.contributions.some((c) => c.memberId === id)) return;
+    db.members = db.members.filter((m) => m.id !== id);
+    await write(db);
+  }
+
+  async addContribution(input: NewContribution): Promise<Contribution> {
     const db = await read();
     const member = db.members.find((m) => m.id === input.memberId);
     if (!member) throw new Error("Miembro no encontrado");
-    const contribution: Contribution = {
+    const c: Contribution = {
       id: randomUUID(),
       memberId: member.id,
       memberName: member.name,
+      memberEmoji: member.emoji,
+      memberColor: member.color,
       amount: input.amount,
       date: input.date,
       status: input.confirmNow ? "confirmado" : "pendiente",
+      descripcion: input.descripcion,
+      metodo: input.metodo,
+      soporteUrl: input.soporteUrl,
       createdAt: new Date().toISOString(),
     };
-    db.contributions.push(contribution);
+    db.contributions.push(c);
     await write(db);
-    return contribution;
+    return c;
   }
 
-  async confirmContribution(id: string): Promise<void> {
+  async confirmContribution(id: string) {
     const db = await read();
     const c = db.contributions.find((x) => x.id === id);
-    if (!c) throw new Error("Aporte no encontrado");
-    if (c.status === "pendiente") c.status = "confirmado";
+    if (c && c.status === "pendiente") c.status = "confirmado";
     await write(db);
   }
 
-  async reverseContribution(id: string, note: string): Promise<void> {
+  async reverseContribution(id: string, note: string) {
     const db = await read();
     const c = db.contributions.find((x) => x.id === id);
-    if (!c) throw new Error("Aporte no encontrado");
-    // Append-only: no se borra el registro, se marca reversado con motivo.
-    c.status = "reversado";
-    c.note = note.trim();
+    if (c) {
+      c.status = "reversado";
+      c.note = note.trim();
+    }
     await write(db);
   }
 }

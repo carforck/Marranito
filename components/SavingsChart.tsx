@@ -2,7 +2,15 @@ import type { MonthPoint } from "@/lib/analytics";
 import { formatCOP } from "@/lib/money";
 
 // Gráfica de área del ahorro acumulado por mes. SVG puro, sin dependencias.
-export function SavingsChart({ data }: { data: MonthPoint[] }) {
+export function SavingsChart({
+  data,
+  color = "var(--brand)",
+  title = "AHORRO ACUMULADO",
+}: {
+  data: MonthPoint[];
+  color?: string;
+  title?: string;
+}) {
   const W = 320;
   const H = 150;
   const padX = 8;
@@ -34,7 +42,7 @@ export function SavingsChart({ data }: { data: MonthPoint[] }) {
       <div className="mb-1 flex items-baseline justify-between">
         <div>
           <p className="text-xs font-semibold tracking-wide text-[var(--muted)]">
-            AHORRO ACUMULADO
+            {title}
           </p>
           <p className="mt-1 text-2xl font-extrabold tabular-nums">
             {formatCOP(data.at(-1)?.cumulative ?? 0)}
@@ -48,8 +56,8 @@ export function SavingsChart({ data }: { data: MonthPoint[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Ahorro acumulado por mes">
         <defs>
           <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -71,7 +79,7 @@ export function SavingsChart({ data }: { data: MonthPoint[] }) {
           <path
             d={linePath}
             fill="none"
-            stroke="var(--brand)"
+            stroke={color}
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -81,8 +89,8 @@ export function SavingsChart({ data }: { data: MonthPoint[] }) {
         {/* punto final destacado */}
         {n > 0 && (
           <>
-            <circle cx={x(lastIdx)} cy={y(data[lastIdx].cumulative)} r="6" fill="var(--brand)" fillOpacity="0.2" />
-            <circle cx={x(lastIdx)} cy={y(data[lastIdx].cumulative)} r="3.5" fill="var(--brand)" />
+            <circle cx={x(lastIdx)} cy={y(data[lastIdx].cumulative)} r="6" fill={color} fillOpacity="0.2" />
+            <circle cx={x(lastIdx)} cy={y(data[lastIdx].cumulative)} r="3.5" fill={color} />
           </>
         )}
 

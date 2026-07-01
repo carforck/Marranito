@@ -1,36 +1,41 @@
-// Tipos del dominio. Montos SIEMPRE en pesos enteros (centavos no se usan en COP).
-// Nunca usar float para dinero.
+// Tipos del dominio. Montos SIEMPRE en pesos enteros (COP).
 
 export type ContributionStatus = "pendiente" | "confirmado" | "reversado";
+export type PaymentMethod =
+  | "efectivo"
+  | "nequi"
+  | "bancolombia"
+  | "daviplata"
+  | "otro";
 
 export interface Member {
   id: string;
   name: string;
-  createdAt: string; // ISO
+  emoji: string; // avatar tipo emoji
+  color: string; // color propio (hex) para gráficas/perfil
+  createdAt: string;
 }
 
 export interface Contribution {
   id: string;
   memberId: string;
-  memberName: string; // desnormalizado para la vista pública
+  memberName: string;
+  memberEmoji: string;
+  memberColor: string;
   amount: number; // pesos enteros
-  date: string; // ISO (fecha del aporte)
+  date: string; // ISO (yyyy-mm-dd)
   status: ContributionStatus;
-  note?: string; // motivo en caso de reversa
-  createdAt: string; // ISO (cuándo se registró en el sistema)
-}
-
-export interface Cycle {
-  id: string;
-  year: number;
-  goalPerMember?: number; // meta de ahorro por persona (opcional)
-  open: boolean;
+  descripcion?: string; // de dónde/cómo pagó
+  metodo?: PaymentMethod;
+  soporteUrl?: string; // captura del comprobante
+  note?: string; // motivo de reversa
+  createdAt: string;
 }
 
 export interface FundSummary {
-  totalConfirmed: number; // suma de aportes confirmados (pesos)
-  totalPending: number; // suma de aportes pendientes (pesos)
+  totalConfirmed: number;
+  totalPending: number;
   memberCount: number;
-  contributionCount: number; // confirmados
+  contributionCount: number;
   cycleYear: number;
 }

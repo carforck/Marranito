@@ -1,22 +1,38 @@
 import { getPool } from "@/lib/db";
-import type { Store } from "./index";
+import { CYCLE_YEAR } from "@/lib/constants";
+import type { Store, NewContribution, MemberInput } from "./index";
 import type { Contribution, Member, FundSummary } from "@/lib/types";
 
-const CYCLE_YEAR = 2026;
-
-// Mapea una fila de la BD a Contribution. monto viene como string (bigint).
 function rowToContribution(r: Record<string, unknown>): Contribution {
   return {
     id: String(r.id),
     memberId: String(r.miembro_id),
     memberName: String(r.nombre),
+    memberEmoji: String(r.emoji ?? "🐷"),
+    memberColor: String(r.color ?? "#6c5ce7"),
     amount: Number(r.monto),
     date: String(r.fecha).slice(0, 10),
     status: r.estado as Contribution["status"],
+    descripcion: r.descripcion ? String(r.descripcion) : undefined,
+    metodo: r.metodo ? (String(r.metodo) as Contribution["metodo"]) : undefined,
+    soporteUrl: r.soporte_url ? String(r.soporte_url) : undefined,
     note: r.nota ? String(r.nota) : undefined,
     createdAt: new Date(r.created_at as string).toISOString(),
   };
 }
+
+function rowToMember(r: Record<string, unknown>): Member {
+  return {
+    id: String(r.id),
+    name: String(r.nombre),
+    emoji: String(r.emoji ?? "🐷"),
+    color: String(r.color ?? "#6c5ce7"),
+    createdAt: new Date(r.created_at as string).toISOString(),
+  };
+}
+
+const JOIN = `select a.*, m.nombre, m.emoji, m.color
+  from public.aportes a join public.miembros m on m.id = a.miembro_id`;
 
 export class SupabaseStore implements Store {
   async getSummary(): Promise<FundSummary> {
@@ -41,83 +57,95 @@ export class SupabaseStore implements Store {
     };
   }
 
-  private async list(where: string): Promise<Contribution[]> {
-    const pool = getPool();
-    const { rows } = await pool.query(
-      `select a.*, m.nombre
-         from public.aportes a
-         join public.miembros m on m.id = a.miembro_id
-         ${where}
-        order by a.fecha desc, a.created_at desc`,
+  private async list(where: string, params: unknown[] = []): Promise<Contribution[]> {
+    const { rows } = await getPool().query(
+      `${JOIN} ${where} order by a.fecha desc, a.created_at desc`,
+      params,
     );
     return rows.map(rowToContribution);
   }
 
-  listConfirmed(): Promise<Contribution[]> {
+  listConfirmed() {
     return this.list("where a.estado = 'confirmado'");
   }
-
-  listAll(): Promise<Contribution[]> {
+  listAll() {
     return this.list("");
+  }
+  listByMember(memberId: string) {
+    return this.list("where a.miembro_id = $1", [memberId]);
   }
 
   async listMembers(): Promise<Member[]> {
-    const pool = getPool();
-    const { rows } = await pool.query(
-      `select id, nombre, created_at from public.miembros order by nombre asc`,
+    const { rows } = await getPool().query(
+      `select * from public.miembros order by nombre asc`,
     );
-    return rows.map((r) => ({
-      id: String(r.id),
-      name: String(r.nombre),
-      createdAt: new Date(r.created_at).toISOString(),
-    }));
+    return rows.map(rowToMember);
   }
 
-  async addMember(name: string): Promise<Member> {
-    const pool = getPool();
-    const { rows } = await pool.query(
-      `insert into public.miembros (nombre) values ($1) returning id, nombre, created_at`,
-      [name.trim()],
+  async getMember(id: string): Promise<Member | null> {
+    const { rows } = await getPool().query(
+      `select * from public.miembros where id = $1`,
+      [id],
     );
-    const r = rows[0];
-    return {
-      id: String(r.id),
-      name: String(r.nombre),
-      createdAt: new Date(r.created_at).toISOString(),
-    };
+    return rows[0] ? rowToMember(rows[0]) : null;
   }
 
-  async addContribution(input: {
-    memberId: string;
-    amount: number;
-    date: string;
-    confirmNow?: boolean;
-  }): Promise<Contribution> {
-    const pool = getPool();
+  async addMember(input: MemberInput): Promise<Member> {
+    const { rows } = await getPool().query(
+      `insert into public.miembros (nombre, emoji, color)
+       values ($1,$2,$3) returning *`,
+      [input.name.trim(), input.emoji, input.color],
+    );
+    return rowToMember(rows[0]);
+  }
+
+  async updateMember(id: string, input: MemberInput): Promise<void> {
+    await getPool().query(
+      `update public.miembros set nombre=$2, emoji=$3, color=$4 where id=$1`,
+      [id, input.name.trim(), input.emoji, input.color],
+    );
+  }
+
+  async deleteMember(id: string): Promise<void> {
+    // Solo se puede borrar si no tiene aportes (protege el historial).
+    await getPool().query(
+      `delete from public.miembros where id=$1
+        and not exists (select 1 from public.aportes where miembro_id=$1)`,
+      [id],
+    );
+  }
+
+  async addContribution(input: NewContribution): Promise<Contribution> {
     const estado = input.confirmNow ? "confirmado" : "pendiente";
-    const { rows } = await pool.query(
-      `insert into public.aportes (miembro_id, monto, fecha, estado, ciclo_id)
-       values ($1,$2,$3,$4, (select id from public.ciclos where anio=$5))
-       returning *,
-         (select nombre from public.miembros where id=$1) as nombre`,
-      [input.memberId, input.amount, input.date, estado, CYCLE_YEAR],
+    const { rows } = await getPool().query(
+      `insert into public.aportes
+         (miembro_id, monto, fecha, estado, descripcion, metodo, soporte_url, ciclo_id)
+       values ($1,$2,$3,$4,$5,$6,$7,(select id from public.ciclos where anio=$8))
+       returning id`,
+      [
+        input.memberId,
+        input.amount,
+        input.date,
+        estado,
+        input.descripcion ?? null,
+        input.metodo ?? null,
+        input.soporteUrl ?? null,
+        CYCLE_YEAR,
+      ],
     );
-    return rowToContribution(rows[0]);
+    const list = await this.list("where a.id = $1", [rows[0].id]);
+    return list[0];
   }
 
   async confirmContribution(id: string): Promise<void> {
-    const pool = getPool();
-    await pool.query(
-      `update public.aportes set estado='confirmado'
-        where id=$1 and estado='pendiente'`,
+    await getPool().query(
+      `update public.aportes set estado='confirmado' where id=$1 and estado='pendiente'`,
       [id],
     );
   }
 
   async reverseContribution(id: string, note: string): Promise<void> {
-    const pool = getPool();
-    // Append-only: no se borra, se marca reversado con motivo.
-    await pool.query(
+    await getPool().query(
       `update public.aportes set estado='reversado', nota=$2 where id=$1`,
       [id, note.trim()],
     );

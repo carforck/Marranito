@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { getStore } from "@/lib/store";
 import { formatCOP } from "@/lib/money";
 import { memberTotals } from "@/lib/analytics";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui";
-import { IconAvatar } from "@/components/decor";
+import { EmojiAvatar } from "@/components/decor";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,9 @@ export default async function CompanerosPage() {
   const totalById = new Map(totals.map((t) => [t.memberId, t]));
   const grand = totals.reduce((s, t) => s + t.total, 0);
 
-  // Todos los miembros, ordenados por lo aportado (incluye los de $0).
   const rows = members
     .map((m) => ({
-      id: m.id,
-      name: m.name,
+      ...m,
       total: totalById.get(m.id)?.total ?? 0,
       count: totalById.get(m.id)?.count ?? 0,
     }))
@@ -33,13 +32,13 @@ export default async function CompanerosPage() {
       <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
         <h1 className="text-2xl font-extrabold tracking-tight">Compañeros</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Cuánto ha aportado cada quien. Todos lo ven — así es transparente.
+          Cuánto ha aportado cada quien. Toca a alguien para ver su historial.
         </p>
 
         {rows.length === 0 ? (
           <Card className="mt-6 px-5 py-10 text-center">
             <p className="text-sm text-[var(--muted)]">
-              Aún no hay compañeros registrados.
+              Aún no hay compañeros. El tesorero los crea en la Tesorería.
             </p>
           </Card>
         ) : (
@@ -47,25 +46,27 @@ export default async function CompanerosPage() {
             {rows.map((m, i) => {
               const pct = grand > 0 ? Math.round((m.total / grand) * 100) : 0;
               return (
-                <Card key={m.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="w-5 text-center text-sm font-bold text-[var(--muted)]">
-                    {i + 1}
-                  </span>
-                  <IconAvatar name={m.name} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{m.name}</p>
-                    <p className="text-xs text-[var(--muted)]">
-                      {m.count} {m.count === 1 ? "aporte" : "aportes"} · {pct}% del fondo
-                    </p>
-                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
-                      <div
-                        className="h-full rounded-full bg-[var(--brand)]"
-                        style={{ width: `${pct}%` }}
-                      />
+                <Link key={m.id} href={`/companeros/${m.id}`} className="block">
+                  <Card className="flex items-center gap-3 px-4 py-3 transition hover:border-[var(--brand)]">
+                    <span className="w-5 text-center text-sm font-bold text-[var(--muted)]">
+                      {i + 1}
+                    </span>
+                    <EmojiAvatar emoji={m.emoji} color={m.color} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{m.name}</p>
+                      <p className="text-xs text-[var(--muted)]">
+                        {m.count} {m.count === 1 ? "aporte" : "aportes"} · {pct}% del fondo
+                      </p>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, background: m.color }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <span className="font-bold tabular-nums">{formatCOP(m.total)}</span>
-                </Card>
+                    <span className="font-bold tabular-nums">{formatCOP(m.total)}</span>
+                  </Card>
+                </Link>
               );
             })}
           </div>

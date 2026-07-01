@@ -1,4 +1,4 @@
-// Elementos decorativos del hero (estilo memphis) y avatar de icono por color.
+// Elementos decorativos del hero (estilo memphis) y avatar de emoji por color.
 
 export function HeroDecor() {
   return (
@@ -15,14 +15,10 @@ export function HeroDecor() {
         <path d="M300 250 q10 -12 20 0 t20 0" />
       </g>
       <g fill="#ffffff" fillOpacity="0.14">
-        <circle cx="352" cy="150" r="4" />
-        <circle cx="368" cy="150" r="4" />
-        <circle cx="352" cy="166" r="4" />
-        <circle cx="368" cy="166" r="4" />
-        <circle cx="336" cy="150" r="4" />
-        <circle cx="336" cy="166" r="4" />
-        <circle cx="40" cy="60" r="4" />
-        <circle cx="56" cy="60" r="4" />
+        <circle cx="352" cy="150" r="4" /><circle cx="368" cy="150" r="4" />
+        <circle cx="352" cy="166" r="4" /><circle cx="368" cy="166" r="4" />
+        <circle cx="336" cy="150" r="4" /><circle cx="336" cy="166" r="4" />
+        <circle cx="40" cy="60" r="4" /><circle cx="56" cy="60" r="4" />
         <circle cx="40" cy="76" r="4" />
       </g>
       <g stroke="#ffffff" strokeOpacity="0.18" strokeWidth="2" fill="none">
@@ -33,30 +29,23 @@ export function HeroDecor() {
   );
 }
 
-const COLORS = [
-  { bg: "#efecfe", fg: "#6c5ce7" },
-  { bg: "#e6f9ee", fg: "#22c55e" },
-  { bg: "#fff3e0", fg: "#f59e0b" },
-  { bg: "#ffe9ee", fg: "#f43f5e" },
-  { bg: "#e7f0ff", fg: "#3b82f6" },
-  { bg: "#f3e8ff", fg: "#a855f7" },
-];
+const SIZES = { sm: "h-9 w-9 text-lg", md: "h-11 w-11 text-xl", lg: "h-16 w-16 text-3xl" };
 
-function colorFor(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  return COLORS[h % COLORS.length];
-}
-
-export function IconAvatar({ name }: { name: string }) {
-  const c = colorFor(name);
-  const initial = name.trim().charAt(0).toUpperCase() || "•";
+export function EmojiAvatar({
+  emoji,
+  color,
+  size = "md",
+}: {
+  emoji: string;
+  color: string;
+  size?: keyof typeof SIZES;
+}) {
   return (
     <div
-      className="flex h-11 w-11 items-center justify-center rounded-2xl text-base font-bold"
-      style={{ background: c.bg, color: c.fg }}
+      className={`flex flex-none items-center justify-center rounded-2xl ${SIZES[size]}`}
+      style={{ background: `${color}22`, boxShadow: `inset 0 0 0 1.5px ${color}33` }}
     >
-      {initial}
+      <span className="leading-none">{emoji || "🐷"}</span>
     </div>
   );
 }

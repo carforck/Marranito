@@ -1,4 +1,4 @@
-import type { Contribution } from "./types";
+import type { Contribution, Member } from "./types";
 
 export interface MemberTotal {
   memberId: string;
@@ -28,7 +28,60 @@ export interface MonthPoint {
   cumulative: number; // acumulado hasta ese mes
 }
 
-const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+export const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+export interface MemberSeries {
+  memberId: string;
+  name: string;
+  emoji: string;
+  color: string;
+  cumulative: number[]; // acumulado por mes (misma longitud que labels)
+  total: number;
+}
+
+/**
+ * Acumulado por compañero, mes a mes. Una serie por persona para la
+ * gráfica multi-línea (cada quien con su color).
+ */
+export function seriesByMember(
+  confirmed: Contribution[],
+  members: Member[],
+  year: number,
+  upToMonth = 12,
+): { labels: string[]; series: MemberSeries[] } {
+  const last = Math.max(1, Math.min(12, upToMonth));
+  const labels = MESES.slice(0, last);
+
+  const series: MemberSeries[] = members.map((m) => ({
+    memberId: m.id,
+    name: m.name,
+    emoji: m.emoji,
+    color: m.color,
+    cumulative: new Array(last).fill(0),
+    total: 0,
+  }));
+  const byId = new Map(series.map((s) => [s.memberId, s]));
+
+  for (const c of confirmed) {
+    const [y, mo] = c.date.split("-").map(Number);
+    const s = byId.get(c.memberId);
+    if (!s || y !== year || mo < 1 || mo > last) continue;
+    s.cumulative[mo - 1] += c.amount;
+  }
+  for (const s of series) {
+    let acc = 0;
+    for (let i = 0; i < last; i++) {
+      acc += s.cumulative[i];
+      s.cumulative[i] = acc;
+    }
+    s.total = acc;
+  }
+  // Solo quienes han aportado, de mayor a menor.
+  return {
+    labels,
+    series: series.filter((s) => s.total > 0).sort((a, b) => b.total - a.total),
+  };
+}
 
 /**
  * Serie mensual del ciclo (ene–dic) con lo aportado por mes y el acumulado.

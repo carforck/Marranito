@@ -1,5 +1,6 @@
 import { formatCOP } from "@/lib/money";
-import { IconAvatar } from "./decor";
+import { EmojiAvatar } from "./decor";
+import { metodoLabel } from "@/lib/constants";
 import type { Contribution, ContributionStatus } from "@/lib/types";
 
 export function Card({
@@ -81,27 +82,43 @@ export function MovementRow({
   showStatus?: boolean;
 }) {
   const reversed = c.status === "reversado";
+  const meta = [metodoLabel(c.metodo), c.descripcion, c.note && `motivo: ${c.note}`]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <div className="themed flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-      <IconAvatar name={c.memberName} />
+      <EmojiAvatar emoji={c.memberEmoji} color={c.memberColor} />
       <div className="min-w-0 flex-1">
         <p className={`truncate font-semibold ${reversed ? "line-through opacity-60" : ""}`}>
           {c.memberName}
         </p>
-        <p className="text-xs text-[var(--muted)]">
+        <p className="truncate text-xs text-[var(--muted)]">
           {formatDate(c.date)}
-          {c.note ? ` · ${c.note}` : ""}
+          {meta ? ` · ${meta}` : ""}
         </p>
       </div>
-      {showStatus && <StatusBadge status={c.status} />}
-      <span
-        className={`font-bold tabular-nums ${
-          c.status === "confirmado" ? "text-[var(--ok)]" : "text-[var(--muted)]"
-        }`}
-      >
-        {c.status === "confirmado" ? "+ " : ""}
-        {formatCOP(c.amount)}
-      </span>
+      <div className="flex flex-none items-center gap-2.5">
+        {c.soporteUrl && (
+          <a
+            href={c.soporteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ver soporte"
+            className="text-[var(--muted)] hover:text-[var(--brand-soft-fg)]"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" /></svg>
+          </a>
+        )}
+        {showStatus && <StatusBadge status={c.status} />}
+        <span
+          className={`font-bold tabular-nums ${
+            c.status === "confirmado" ? "text-[var(--ok)]" : "text-[var(--muted)]"
+          }`}
+        >
+          {c.status === "confirmado" ? "+ " : ""}
+          {formatCOP(c.amount)}
+        </span>
+      </div>
     </div>
   );
 }

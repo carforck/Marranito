@@ -1,24 +1,41 @@
-import type { Contribution, Member, FundSummary } from "@/lib/types";
+import type {
+  Contribution,
+  Member,
+  FundSummary,
+  PaymentMethod,
+} from "@/lib/types";
 
-// Puerto: lo que la app necesita de un almacén, sin saber si es JSON local o Supabase.
+export interface NewContribution {
+  memberId: string;
+  amount: number;
+  date: string;
+  descripcion?: string;
+  metodo?: PaymentMethod;
+  soporteUrl?: string;
+  confirmNow?: boolean;
+}
+
+export interface MemberInput {
+  name: string;
+  emoji: string;
+  color: string;
+}
+
+// Puerto: lo que la app necesita de un almacén.
 export interface Store {
   getSummary(): Promise<FundSummary>;
-  // Vista pública: solo aportes confirmados, sin datos sensibles.
   listConfirmed(): Promise<Contribution[]>;
-  // Vista admin: todo, incluyendo pendientes y reversados.
   listAll(): Promise<Contribution[]>;
   listMembers(): Promise<Member[]>;
+  getMember(id: string): Promise<Member | null>;
+  listByMember(memberId: string): Promise<Contribution[]>;
 
-  addMember(name: string): Promise<Member>;
-  // Registra un aporte. Por defecto entra como "pendiente".
-  addContribution(input: {
-    memberId: string;
-    amount: number;
-    date: string;
-    confirmNow?: boolean;
-  }): Promise<Contribution>;
+  addMember(input: MemberInput): Promise<Member>;
+  updateMember(id: string, input: MemberInput): Promise<void>;
+  deleteMember(id: string): Promise<void>;
+
+  addContribution(input: NewContribution): Promise<Contribution>;
   confirmContribution(id: string): Promise<void>;
-  // Append-only: no se borra, se reversa dejando motivo.
   reverseContribution(id: string, note: string): Promise<void>;
 }
 
@@ -30,7 +47,6 @@ let instance: Store | null = null;
 
 export function getStore(): Store {
   if (!instance) {
-    // Si hay credenciales de Supabase, usamos Postgres; si no, JSON local.
     instance = hasSupabase() ? new SupabaseStore() : new LocalStore();
   }
   return instance;
