@@ -154,6 +154,11 @@ export class LocalStore implements Store {
     const db = await read();
     const member = db.members.find((m) => m.id === input.memberId);
     if (!member) throw new Error("Miembro no encontrado");
+    // Idempotencia: si ya existe un aporte con ese token, devolverlo.
+    if (input.clientToken) {
+      const dup = db.contributions.find((x) => x.clientToken === input.clientToken);
+      if (dup) return decorate(dup, db.members);
+    }
     const c: Contribution = {
       id: randomUUID(),
       memberId: member.id,
@@ -166,6 +171,7 @@ export class LocalStore implements Store {
       descripcion: input.descripcion,
       metodo: input.metodo,
       soporteUrl: input.soporteUrl,
+      clientToken: input.clientToken,
       createdAt: new Date().toISOString(),
     };
     db.contributions.push(c);

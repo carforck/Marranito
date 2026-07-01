@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { registrarAporte } from "./actions";
 import { METODOS } from "@/lib/constants";
 import type { Member } from "@/lib/types";
@@ -10,6 +10,12 @@ export function AportarForm({ members }: { members: Member[] }) {
     ok: false,
     error: null,
   } as { ok: boolean; error: string | null });
+
+  // Token de idempotencia: se genera al montar (evita mismatch de hidratación).
+  const [token, setToken] = useState("");
+  useEffect(() => {
+    setToken(crypto.randomUUID());
+  }, []);
 
   if (state?.ok) {
     return (
@@ -39,6 +45,7 @@ export function AportarForm({ members }: { members: Member[] }) {
       action={action}
       className="themed space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5"
     >
+      <input type="hidden" name="clientToken" value={token} />
       <Field label="¿Quién aporta?">
         <select name="memberId" required defaultValue="" className={input}>
           <option value="" disabled>

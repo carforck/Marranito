@@ -117,10 +117,13 @@ export class SupabaseStore implements Store {
 
   async addContribution(input: NewContribution): Promise<Contribution> {
     const estado = input.confirmNow ? "confirmado" : "pendiente";
+    // on conflict (client_token) do nothing → si se reenvía el mismo token,
+    // no se duplica. Luego resolvemos el id (nuevo o el existente).
     const { rows } = await getPool().query(
       `insert into public.aportes
-         (miembro_id, monto, fecha, estado, descripcion, metodo, soporte_url, ciclo_id)
-       values ($1,$2,$3,$4,$5,$6,$7,(select id from public.ciclos where anio=$8))
+         (miembro_id, monto, fecha, estado, descripcion, metodo, soporte_url, client_token, ciclo_id)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,(select id from public.ciclos where anio=$9))
+       on conflict (client_token) do nothing
        returning id`,
       [
         input.memberId,
@@ -130,10 +133,19 @@ export class SupabaseStore implements Store {
         input.descripcion ?? null,
         input.metodo ?? null,
         input.soporteUrl ?? null,
+        input.clientToken ?? null,
         CYCLE_YEAR,
       ],
     );
-    const list = await this.list("where a.id = $1", [rows[0].id]);
+    let id = rows[0]?.id as string | undefined;
+    if (!id && input.clientToken) {
+      const dup = await getPool().query(
+        `select id from public.aportes where client_token = $1`,
+        [input.clientToken],
+      );
+      id = dup.rows[0]?.id;
+    }
+    const list = await this.list("where a.id = $1", [id]);
     return list[0];
   }
 

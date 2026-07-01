@@ -71,6 +71,25 @@ body {
   background: linear-gradient(155deg, var(--grad-from) 0%, var(--grad-to) 100%);
 }
 
+/* Foco visible accesible (no depende solo del color) */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Sin scroll horizontal accidental; targets táctiles cómodos en móvil */
+html,
+body {
+  overflow-x: hidden;
+}
+button,
+a,
+select,
+input[type="file"] {
+  touch-action: manipulation;
+}
+
 /* transición suave al cambiar de tema */
 @media (prefers-reduced-motion: no-preference) {
   body, .themed { transition: background-color 0.25s ease, color 0.25s ease; }

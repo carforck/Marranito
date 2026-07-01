@@ -67,6 +67,28 @@ export default async function Home() {
           <StatCard label="Por confirmar" value={formatCOP(summary.totalPending)} />
         </section>
 
+        {/* Onboarding cuando aún no hay compañeros */}
+        {summary.memberCount === 0 && (
+          <section className="mt-6">
+            <Card className="p-6 text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-soft)] text-2xl">
+                🐷
+              </div>
+              <h2 className="text-lg font-bold">Empecemos el marranito</h2>
+              <p className="mx-auto mt-1 max-w-md text-sm text-[var(--muted)]">
+                Aún no hay compañeros. Entra a la Tesorería para crearlos (cada
+                uno con su emoji) y define la cuota del grupo.
+              </p>
+              <Link
+                href="/admin"
+                className="mt-4 inline-block rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white"
+              >
+                Ir a Tesorería
+              </Link>
+            </Card>
+          </section>
+        )}
+
         {/* Gráfica multi-línea + top compañeros */}
         <section className="mt-6 grid gap-4 lg:grid-cols-5">
           <div className="lg:col-span-3">

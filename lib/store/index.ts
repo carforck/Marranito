@@ -13,6 +13,7 @@ export interface NewContribution {
   metodo?: PaymentMethod;
   soporteUrl?: string;
   confirmNow?: boolean;
+  clientToken?: string; // idempotencia: evita duplicados por reintento
 }
 
 export interface MemberInput {

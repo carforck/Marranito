@@ -14,6 +14,7 @@ export async function registrarAporte(_prev: unknown, formData: FormData) {
   const date = String(formData.get("date") ?? "");
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const metodo = String(formData.get("metodo") ?? "") as PaymentMethod;
+  const clientToken = String(formData.get("clientToken") ?? "") || undefined;
   const file = formData.get("soporte") as File | null;
 
   if (!memberId) return { ok: false, error: "Elige quién aporta." };
@@ -34,6 +35,7 @@ export async function registrarAporte(_prev: unknown, formData: FormData) {
     descripcion: descripcion || undefined,
     metodo: metodo || undefined,
     soporteUrl,
+    clientToken,
   });
 
   revalidatePath("/");

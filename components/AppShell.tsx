@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MarranitoMark } from "./Logo";
+import { RealtimeRefresh } from "./RealtimeRefresh";
 
 type IconName = "home" | "plus" | "list" | "people" | "vault";
 
@@ -97,6 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
+      <RealtimeRefresh />
       {/* Sidebar escritorio */}
       <aside className="themed fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-[var(--border)] bg-[var(--surface)] p-4 lg:flex">
         <Link href="/" className="mb-6 flex items-center gap-2.5 px-2 pt-2">

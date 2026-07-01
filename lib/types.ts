@@ -29,6 +29,7 @@ export interface Contribution {
   metodo?: PaymentMethod;
   soporteUrl?: string; // captura del comprobante
   note?: string; // motivo de reversa
+  clientToken?: string; // idempotencia
   createdAt: string;
 }
 
