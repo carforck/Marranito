@@ -21,6 +21,16 @@ export const MEMBER_COLORS = [
   "#84cc16", "#e11d48",
 ];
 
+// Medios de pago del fondo (a dónde consignar). Titular del marranito.
+export const TITULAR_PAGO = "Carlos Carranza V. · CC 1238338732";
+export const MEDIOS_PAGO: { label: string; valor: string; nota?: string }[] = [
+  { label: "Bancolombia (Ahorros)", valor: "085-938307-06" },
+  { label: "Nequi / Daviplata", valor: "3105080356" },
+  { label: "Nu", valor: "68309764", nota: "NuPlaca: XNR732 / @XNR732" },
+  { label: "Bre-B (Llave)", valor: "1238338732" },
+  { label: "PayPal", valor: "@CarlosCarranza29" },
+];
+
 // Emojis de personaje/animal tipo iPhone para el avatar.
 export const MEMBER_EMOJIS = [
   "🐷","🐶","🐱","🦊","🐻","🐼","🐨","🐯","🦁","🐮",

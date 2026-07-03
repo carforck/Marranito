@@ -2,6 +2,7 @@ import { getStore } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui";
 import { AportarForm } from "./AportarForm";
+import { MediosDePago } from "./MediosDePago";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,8 @@ export default async function AportarPage() {
         <p className="mt-1 mb-6 text-sm text-[var(--muted)]">
           Cada quien registra el suyo. Queda pendiente hasta que el tesorero lo confirme.
         </p>
+
+        <MediosDePago />
 
         {members.length === 0 ? (
           <Card className="px-5 py-10 text-center">
