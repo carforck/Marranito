@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { MarranitoMark } from "./Logo";
 import { RealtimeRefresh } from "./RealtimeRefresh";
 
-type IconName = "home" | "plus" | "list" | "people" | "vault";
+type IconName = "home" | "plus" | "list" | "people" | "report" | "vault";
 
 const NAV: { href: string; label: string; icon: IconName }[] = [
   { href: "/", label: "Resumen", icon: "home" },
   { href: "/aportar", label: "Aportar", icon: "plus" },
   { href: "/movimientos", label: "Movimientos", icon: "list" },
   { href: "/companeros", label: "Compañeros", icon: "people" },
+  { href: "/liquidacion", label: "Liquidación", icon: "report" },
   { href: "/admin", label: "Tesorería", icon: "vault" },
 ];
 
@@ -27,6 +28,8 @@ function Icon({ name }: { name: IconName }) {
       return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>;
     case "people":
       return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5.5a3 3 0 0 1 0 5.5M17 20a6 6 0 0 0-3-5" /></svg>;
+    case "report":
+      return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5M10 13h6M10 17h6" /></svg>;
     case "vault":
       return <svg viewBox="0 0 24 24" className="h-5 w-5" {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="12" cy="12" r="3.2" /><path d="M12 4v2M12 18v2" /></svg>;
   }
@@ -154,7 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Contenido */}
-      <div className="lg:pl-64">{children}</div>
+      <div className="app-content lg:pl-64">{children}</div>
     </div>
   );
 }

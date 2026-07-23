@@ -90,6 +90,21 @@ input[type="file"] {
   touch-action: manipulation;
 }
 
+/* Impresión / PDF: solo el reporte, sin menú ni cromo */
+@media print {
+  aside,
+  header {
+    display: none !important;
+  }
+  .app-content {
+    padding-left: 0 !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
+
 /* transición suave al cambiar de tema */
 @media (prefers-reduced-motion: no-preference) {
   body, .themed { transition: background-color 0.25s ease, color 0.25s ease; }
