@@ -21,25 +21,36 @@ export async function registrarAporte(_prev: unknown, formData: FormData) {
   if (amount === null || amount <= 0) return { ok: false, error: "El monto no es válido." };
   if (!date) return { ok: false, error: "Falta la fecha." };
 
-  let soporteUrl: string | undefined;
-  if (file && file.size > 0) {
-    const uploaded = await uploadSoporte(file);
-    if (!uploaded) return { ok: false, error: "No se pudo subir el soporte. Intenta de nuevo." };
-    soporteUrl = uploaded;
+  try {
+    let soporteUrl: string | undefined;
+    if (file && file.size > 0) {
+      const uploaded = await uploadSoporte(file);
+      if (!uploaded)
+        return { ok: false, error: "No se pudo subir el comprobante. Vuelve a intentar (o registra sin él)." };
+      soporteUrl = uploaded;
+    }
+
+    const saved = await getStore().addContribution({
+      memberId,
+      amount,
+      date,
+      descripcion: descripcion || undefined,
+      metodo: metodo || undefined,
+      soporteUrl,
+      clientToken,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/movimientos");
+    revalidatePath("/admin");
+    revalidatePath("/companeros");
+    return { ok: true, error: null, amount: saved.amount, member: saved.memberName };
+  } catch (e) {
+    // Nunca fallar en silencio: el usuario siempre recibe un mensaje.
+    console.error("registrarAporte falló:", e);
+    return {
+      ok: false,
+      error: "No se pudo guardar tu aporte. Revisa tu conexión e intenta de nuevo en un momento.",
+    };
   }
-
-  await getStore().addContribution({
-    memberId,
-    amount,
-    date,
-    descripcion: descripcion || undefined,
-    metodo: metodo || undefined,
-    soporteUrl,
-    clientToken,
-  });
-
-  revalidatePath("/");
-  revalidatePath("/movimientos");
-  revalidatePath("/admin");
-  return { ok: true, error: null };
 }

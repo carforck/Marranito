@@ -3,13 +3,16 @@
 import { useActionState, useEffect, useState } from "react";
 import { registrarAporte } from "./actions";
 import { METODOS } from "@/lib/constants";
+import { formatCOP } from "@/lib/money";
 import type { Member } from "@/lib/types";
+
+type State = { ok: boolean; error: string | null; amount?: number; member?: string };
 
 export function AportarForm({ members }: { members: Member[] }) {
   const [state, action, pending] = useActionState(registrarAporte, {
     ok: false,
     error: null,
-  } as { ok: boolean; error: string | null });
+  } as State);
 
   // Token de idempotencia: se genera al montar (evita mismatch de hidratación).
   const [token, setToken] = useState("");
@@ -19,20 +22,35 @@ export function AportarForm({ members }: { members: Member[] }) {
 
   if (state?.ok) {
     return (
-      <div className="themed rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+      <div className="themed rounded-3xl border-2 border-[var(--ok)] bg-[var(--surface)] p-8 text-center">
         <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--ok-soft)] text-2xl">
           ✅
         </div>
-        <h2 className="text-lg font-bold">¡Aporte registrado!</h2>
+        <h2 className="text-lg font-bold">¡Aporte guardado!</h2>
+        {state.amount != null && (
+          <p className="mt-1 text-2xl font-extrabold tabular-nums text-[var(--ok)]">
+            {formatCOP(state.amount)}
+          </p>
+        )}
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Queda como <b>pendiente</b> hasta que el tesorero lo confirme. Gracias 🐷
+          {state.member ? `Registrado a nombre de ${state.member}. ` : ""}
+          Quedó como <b>pendiente</b> hasta que el tesorero lo confirme. Ya aparece en
+          Movimientos. ¡Gracias! 🐷
         </p>
-        <a
-          href="/aportar"
-          className="mt-5 inline-block rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white"
-        >
-          Registrar otro
-        </a>
+        <div className="mt-5 flex justify-center gap-2">
+          <a
+            href="/movimientos"
+            className="rounded-xl border border-[var(--border)] px-5 py-2.5 text-sm font-semibold"
+          >
+            Ver movimientos
+          </a>
+          <a
+            href="/aportar"
+            className="rounded-xl bg-[var(--brand)] px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            Registrar otro
+          </a>
+        </div>
       </div>
     );
   }
@@ -106,7 +124,13 @@ export function AportarForm({ members }: { members: Member[] }) {
       </Field>
 
       {state?.error && (
-        <p className="text-sm font-medium text-[var(--danger)]">{state.error}</p>
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-xl border border-[var(--danger)] bg-[var(--warn-soft)] px-3 py-2.5 text-sm font-medium text-[var(--danger)]"
+        >
+          <span>⚠️</span>
+          <span>{state.error}</span>
+        </div>
       )}
 
       <button
