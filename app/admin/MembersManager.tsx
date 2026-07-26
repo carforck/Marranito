@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { addMember, updateMember, deleteMember } from "./actions";
 import { MEMBER_COLORS, MEMBER_EMOJIS } from "@/lib/constants";
 import { EmojiAvatar } from "@/components/decor";
+import { ToastForm, useToast } from "@/components/Toast";
 import type { Member } from "@/lib/types";
 
 function randOf<T>(arr: T[]): T {
@@ -22,15 +23,21 @@ function Editor({
   const [emoji, setEmoji] = useState(member?.emoji ?? (() => randOf(MEMBER_EMOJIS)));
   const [color, setColor] = useState(member?.color ?? (() => randOf(MEMBER_COLORS)));
 
+  const toast = useToast();
   const [state, formAction, pending] = useActionState(
     editing ? updateMember : addMember,
-    { ok: false, error: null } as { ok: boolean; error: string | null },
+    { ok: false, error: null } as { ok: boolean; error: string | null; message?: string },
   );
 
-  // Cerrar el editor SOLO cuando la acción terminó bien.
+  // Cerrar el editor y avisar SOLO cuando la acción terminó bien.
   useEffect(() => {
-    if (state?.ok) onDone?.();
-  }, [state, onDone]);
+    if (state?.ok) {
+      toast?.(state.message ?? "Compañero guardado.", "ok");
+      onDone?.();
+    } else if (state?.error) {
+      toast?.(state.error, "error");
+    }
+  }, [state, onDone, toast]);
 
   return (
     <form
@@ -149,7 +156,7 @@ export function MembersManager({ members }: { members: Member[] }) {
               >
                 Editar
               </button>
-              <form action={deleteMember}>
+              <ToastForm action={deleteMember} confirm={`¿Borrar a ${m.name}?`}>
                 <input type="hidden" name="id" value={m.id} />
                 <button
                   className="text-sm font-semibold text-[var(--danger)]"
@@ -157,7 +164,7 @@ export function MembersManager({ members }: { members: Member[] }) {
                 >
                   Borrar
                 </button>
-              </form>
+              </ToastForm>
             </div>
           ),
         )}

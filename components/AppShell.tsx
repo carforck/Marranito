@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MarranitoMark } from "./Logo";
 import { RealtimeRefresh } from "./RealtimeRefresh";
+import { ToastProvider } from "./Toast";
 
 type IconName = "home" | "plus" | "list" | "people" | "report" | "vault";
 
@@ -100,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
+    <ToastProvider>
     <div className="min-h-screen">
       <RealtimeRefresh />
       {/* Sidebar escritorio */}
@@ -159,5 +161,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Contenido */}
       <div className="app-content lg:pl-64">{children}</div>
     </div>
+    </ToastProvider>
   );
 }

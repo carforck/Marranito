@@ -5,6 +5,7 @@ import { isAuthed } from "@/lib/auth";
 import { AppShell } from "@/components/AppShell";
 import { Card, StatusBadge } from "@/components/ui";
 import { EmojiAvatar } from "@/components/decor";
+import { ToastForm } from "@/components/Toast";
 import { metodoLabel } from "@/lib/constants";
 import { LoginForm } from "./LoginForm";
 import { MembersManager } from "./MembersManager";
@@ -62,7 +63,7 @@ export default async function AdminPage() {
             Cuánto debería aportar cada compañero por mes. Con esto la app marca
             quién va al día. Déjalo en 0 si no quieres metas.
           </p>
-          <form action={setQuota} className="flex gap-2">
+          <ToastForm action={setQuota} className="flex gap-2">
             <input
               name="quota"
               inputMode="numeric"
@@ -73,13 +74,13 @@ export default async function AdminPage() {
             <button className="rounded-xl bg-[var(--brand)] px-5 font-semibold text-white">
               Guardar
             </button>
-          </form>
+          </ToastForm>
         </Card>
 
         {/* Registrar aporte */}
         <Card className="p-5">
           <h2 className="mb-4 font-semibold">Registrar aporte</h2>
-          <form action={addContribution} className="grid gap-3 sm:grid-cols-2">
+          <ToastForm action={addContribution} className="grid gap-3 sm:grid-cols-2">
             <select
               name="memberId"
               required
@@ -113,7 +114,7 @@ export default async function AdminPage() {
             <button className="rounded-xl bg-[var(--brand)] py-2.5 font-semibold text-white sm:col-span-2">
               Registrar
             </button>
-          </form>
+          </ToastForm>
         </Card>
 
         {/* Movimientos */}
@@ -150,7 +151,7 @@ export default async function AdminPage() {
               {c.status !== "reversado" && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 pl-12">
                   {c.status === "pendiente" && (
-                    <form action={confirmContribution}>
+                    <ToastForm action={confirmContribution}>
                       <input type="hidden" name="id" value={c.id} />
                       <button
                         className="rounded-lg px-3 py-1 text-xs font-semibold"
@@ -158,9 +159,9 @@ export default async function AdminPage() {
                       >
                         Confirmar
                       </button>
-                    </form>
+                    </ToastForm>
                   )}
-                  <form action={reverseContribution} className="flex items-center gap-1.5">
+                  <ToastForm action={reverseContribution} confirm="¿Reversar este aporte?" className="flex items-center gap-1.5">
                     <input type="hidden" name="id" value={c.id} />
                     <input
                       name="note"
@@ -171,7 +172,7 @@ export default async function AdminPage() {
                     <button className="rounded-lg bg-[var(--surface-2)] px-3 py-1 text-xs font-semibold text-[var(--muted)]">
                       Reversar
                     </button>
-                  </form>
+                  </ToastForm>
                 </div>
               )}
             </div>
